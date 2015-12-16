@@ -1,0 +1,1 @@
+"./cc1120_vchip_easy_link_tx.obj" "./cc112x_spi.obj" "./hal_board.obj" "./hal_digio2.obj" "./hal_int.obj" "./hal_int_rf_msp_exp430g2.obj" "./hal_msp_exp430g2_spi.obj" "../lnk_msp430g2553.cmd" -l"libc.a" 
