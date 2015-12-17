@@ -60,7 +60,7 @@
 * LOCAL VARIABLES
 */
 static uint8  packetSemaphore;
-
+static uint8  RTMODE_FLAG = 0; // 0  RX mode ;  1 TX mode
 /******************************************************************************
 * STATIC FUNCTIONS
 */
@@ -69,6 +69,7 @@ static void runRX(void);
 static void radioRxTxISR(void);
 static void manualCalibration(void);
 static void serialInit(void);
+static void createPacket(uint8 txBuffer[],uint8 rxBytes);
 /******************************************************************************
  * @fn          main
  *
@@ -85,12 +86,13 @@ void main(void)
   //init LEDs
   halLedInit();
   //init button
-  halButtonInit();
-  halButtonInterruptEnable();
+  //halButtonInit();
+  //halButtonInterruptEnable();
   // init spi
   exp430RfSpiInit();
   // write radio registers
   registerConfig();
+
   serialInit();
   // run either TX or RX dependent of build define  
   runRX();
@@ -124,61 +126,80 @@ static void runRX(void)
   // set radio in RX
   trxSpiCmdStrobe(CC112X_SRX);
   
+
   // Infinite loop
   while(TRUE){
     
     // Wait for packet received interrupt 
     if(packetSemaphore == ISR_ACTION_REQUIRED){
-      
-      // Read number of bytes in rx fifo
-      cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rxBytes, 1);
-      
-      // Check that we have bytes in fifo
-      if(rxBytes != 0){
-        
-        // Read marcstate to check for RX FIFO error
-        cc112xSpiReadReg(CC112X_MARCSTATE, &marcStatus, 1);
-        
-        // Mask out marcstate bits and check if we have a RX FIFO error
-        if((marcStatus & 0x1F) == RX_FIFO_ERROR){
-          
-          // Flush RX Fifo
-          trxSpiCmdStrobe(CC112X_SFRX);
-        }
-        else{
-        
-          // Read n bytes from rx fifo
-          cc112xSpiReadRxFifo(rxBuffer, rxBytes);  
-          
-          // Check CRC ok (CRC_OK: bit7 in second status byte)
-          // This assumes status bytes are appended in RX_FIFO
-          // (PKT_CFG1.APPEND_STATUS = 1.)
-          // If CRC is disabled the CRC_OK field will read 1
-          if(rxBuffer[rxBytes-1] & 0x80){
-            
-            // Toggle LED
-            halLedToggle(LED1);
-            uint8 i = 0 ;
-            for(i=0;i<rxBytes;i++)
-            {
-            	IFG2 &= ~UCA0TXIFG;
-            	UCA0TXBUF = rxBuffer[i];;
-            	while(!(IFG2 & UCA0TXIFG));
-                IFG2 &= ~UCA0TXIFG;
-            }
-            /*IFG2 &= ~UCA0TXIFG;
-            UCA0TXBUF = rxBuffer[rxBytes-1];
-			while(!(IFG2 & UCA0TXIFG));
-            IFG2 &= ~UCA0TXIFG;*/
-          }
-        }
-      }
-      // Reset packet semaphore
-      packetSemaphore = ISR_IDLE;
-      
-      // Set radio back in RX
-      trxSpiCmdStrobe(CC112X_SRX);
-      
+
+    	if(RTMODE_FLAG == 0)       //RX from master module
+    	{
+    		// Read number of bytes in rx fifo
+    		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rxBytes, 1);
+
+    		// Check that we have bytes in fifo
+    		if(rxBytes != 0){
+
+				// Read marcstate to check for RX FIFO error
+				cc112xSpiReadReg(CC112X_MARCSTATE, &marcStatus, 1);
+
+				// Mask out marcstate bits and check if we have a RX FIFO error
+				if((marcStatus & 0x1F) == RX_FIFO_ERROR){
+
+					// Flush RX Fifo
+					trxSpiCmdStrobe(CC112X_SFRX);
+				}else{
+
+					// Read n bytes from rx fifo
+					cc112xSpiReadRxFifo(rxBuffer, rxBytes);
+					halLedToggle(LED1);
+					__delay_cycles(250000);
+					halLedToggle(LED1);
+                    /*
+					// Check CRC ok (CRC_OK: bit7 in second status byte)
+					// This assumes status bytes are appended in RX_FIFO
+					// (PKT_CFG1.APPEND_STATUS = 1.)
+					// If CRC is disabled the CRC_OK field will read 1
+					if(rxBuffer[rxBytes-1] & 0x80){     // no error here!
+
+						// Toggle LED
+						halLedToggle(LED1);
+						uint8 i = 0 ;
+						for(i=0;i<rxBytes;i++)
+						{
+							IFG2 &= ~UCA0TXIFG;
+							UCA0TXBUF = rxBuffer[i];;
+							while(!(IFG2 & UCA0TXIFG));
+							IFG2 &= ~UCA0TXIFG;
+						}
+
+					}*/
+				}
+    		}
+    	    // Reset packet semaphore
+    	    packetSemaphore = ISR_IDLE;
+    		RTMODE_FLAG = 1;
+    	}
+    }
+    if(RTMODE_FLAG == 1)  // TX to master module
+    {
+    	createPacket(rxBuffer,rxBytes);
+    	// write packet to tx fifo
+    	cc112xSpiWriteTxFifo(rxBuffer,rxBytes+1);
+        // strobe TX to send packet
+    	trxSpiCmdStrobe(CC112X_STX);
+    	// wait for interrupt that packet has been sent.
+    	// (Assumes the GPIO connected to the radioRxTxISR function is set
+    	// to GPIOx_CFG = 0x06)
+    	while(!packetSemaphore);
+    	// clear semaphore flag
+    	packetSemaphore = ISR_IDLE;
+    	RTMODE_FLAG = 0;
+    	trxSpiCmdStrobe(CC112X_SRX);
+		halLedToggle(LED1);
+		__delay_cycles(250000);
+		halLedToggle(LED1);
     }
   } 
 }
@@ -212,6 +233,15 @@ static void radioRxTxISR(void) {
   trxClearIntFlag(GPIO_0);
 }
 
+static void createPacket(uint8 rxBuffer[],uint8 rxBytes)
+{
+  uint8 i = 0 ;
+  for (i=rxBytes;i>0;i--)
+  {
+	  rxBuffer[i]=rxBuffer[i-1];
+  }
+  rxBuffer[0] = rxBytes;
+}
 /*******************************************************************************
 * @fn          registerConfig
 *

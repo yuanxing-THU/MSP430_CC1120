@@ -52,13 +52,13 @@
 */
 #define ISR_ACTION_REQUIRED 1
 #define ISR_IDLE            0
-
+#define RX_FIFO_ERROR       0x11
 //#define PKTLEN              30
 /******************************************************************************
 * LOCAL VARIABLES
 */
 static uint8  packetSemaphore;
-static uint32 packetCounter;
+//static uint32 packetCounter;
 
 static uint8 pktlen = 0;
 static uint8 RX_PC_FLAG = 0;
@@ -90,8 +90,8 @@ void main(void)
   //init LEDs
   halLedInit();
   //init button
-  halButtonInit();
-  halButtonInterruptEnable();
+  //halButtonInit();
+  //halButtonInterruptEnable();
   // init spi
   exp430RfSpiInit();
   // write radio registers
@@ -113,21 +113,22 @@ void main(void)
  */
 static void runTX_RX(void)
 {
+  uint8 marcStatus;
+  P2SEL &= ~0x40; // P2SEL bit 6 (GDO0) set to one as default. Set to zero (I/O)
+  // connect ISR function to GPIO0, interrupt on falling edge
+  trxIsrConnect(GPIO_0, FALLING_EDGE, &radioRxTxISR);
+
+  // enable interrupt from GPIO_0
+  trxEnableInt(GPIO_0);
+
+  // Calibrate radio according to errata
+  manualCalibration();
+
   while(TRUE)
   {
 	  if(TX_FALG == 1)//send data to slave module
 	  {
 		  TX_FALG = 0;
-		  P2SEL &= ~0x40; // P2SEL bit 6 (GDO0) set to one as default. Set to zero (I/O)
-		  // connect ISR function to GPIO0, interrupt on falling edge
-		  trxIsrConnect(GPIO_0, FALLING_EDGE, &radioRxTxISR);
-
-		  // enable interrupt from GPIO_0
-		  trxEnableInt(GPIO_0);
-
-		  // Calibrate radio according to errata
-		  manualCalibration();
-
 		  createPacket(txBuffer);
 		  // write packet to tx fifo
 		  cc112xSpiWriteTxFifo(txBuffer,pktlen+1);
@@ -139,11 +140,50 @@ static void runTX_RX(void)
 	      while(!packetSemaphore);
 	      // clear semaphore flag
 	      packetSemaphore = ISR_IDLE;
-	      pktlen = 0;
+
 	      halLedToggle(LED1);
 	      __delay_cycles(250000);
 	      halLedToggle(LED1);
-	      IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
+	      RX_SL_FLAG = 1 ;  //set revieve form slave module flag
+	      trxSpiCmdStrobe(CC112X_SRX);
+	  }
+
+	  if(RX_SL_FLAG==1&&packetSemaphore!=ISR_IDLE) //have recieved data from slave module
+	  {
+		RX_SL_FLAG = 0;
+  		// Read number of bytes in rx fifo
+  		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &pktlen, 1);
+
+  		// Check that we have bytes in fifo
+  		if(pktlen != 0){
+
+			// Read marcstate to check for RX FIFO error
+			cc112xSpiReadReg(CC112X_MARCSTATE, &marcStatus, 1);
+
+			// Mask out marcstate bits and check if we have a RX FIFO error
+			if((marcStatus & 0x1F) == RX_FIFO_ERROR){
+				// Flush RX Fifo
+				trxSpiCmdStrobe(CC112X_SFRX);
+			}else{
+				// Read n bytes from rx fifo
+				cc112xSpiReadRxFifo(txBuffer, pktlen);
+				uint8 i = 0 ;
+				for(i=0;i<pktlen;i++)
+				{
+					IFG2 &= ~UCA0TXIFG;
+					UCA0TXBUF = txBuffer[i];;
+					while(!(IFG2 & UCA0TXIFG));
+					IFG2 &= ~UCA0TXIFG;
+				}
+				halLedToggle(LED1);
+			    __delay_cycles(250000);
+				halLedToggle(LED1);
+			}
+  		}
+  	    // Reset packet semaphore
+  	    packetSemaphore = ISR_IDLE;
+  	    pktlen = 0;
+  	    IE2 |= UCA0RXIE;                          // Enable USCI_A0 UART RX interrupt
 	  }
   }
   /*// Initialize packet buffer of size PKTLEN + 1
