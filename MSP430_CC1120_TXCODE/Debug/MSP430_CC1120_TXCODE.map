@@ -1,10 +1,10 @@
 ******************************************************************************
                   MSP430 Linker PC v4.4.5                      
 ******************************************************************************
->> Linked Wed Dec 16 16:08:36 2015
+>> Linked Thu Dec 17 15:47:56 2015
 
 OUTPUT FILE NAME:   <MSP430_CC1120_TXCODE.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs_noexit"  address: 0000c932
+ENTRY POINT SYMBOL: "_c_int00_noargs_noexit"  address: 0000c8c8
 
 
 MEMORY CONFIGURATION
@@ -14,12 +14,12 @@ MEMORY CONFIGURATION
   SFR                   00000000   00000010  00000000  00000010  RWIX
   PERIPHERALS_8BIT      00000010   000000f0  00000000  000000f0  RWIX
   PERIPHERALS_16BIT     00000100   00000100  00000000  00000100  RWIX
-  RAM                   00000200   00000200  00000084  0000017c  RWIX
+  RAM                   00000200   00000200  0000007c  00000184  RWIX
   INFOD                 00001000   00000040  00000000  00000040  RWIX
   INFOC                 00001040   00000040  00000000  00000040  RWIX
   INFOB                 00001080   00000040  00000000  00000040  RWIX
   INFOA                 000010c0   00000040  00000000  00000040  RWIX
-  FLASH                 0000c000   00003fde  00000afe  000034e0  RWIX
+  FLASH                 0000c000   00003fde  00000a8a  00003554  RWIX
   BSLSIGNATURE          0000ffde   00000002  00000002  00000000  RWIX  ffff 
   INT00                 0000ffe0   00000002  00000002  00000000  RWIX
   INT01                 0000ffe2   00000002  00000000  00000002  RWIX
@@ -44,18 +44,15 @@ SECTION ALLOCATION MAP
  output                                  attributes/
 section   page    origin      length       input sections
 --------  ----  ----------  ----------   ----------------
-.data      0    00000200    0000002e     UNINITIALIZED
+.data      0    00000200    00000026     UNINITIALIZED
                   00000200    00000010     hal_digio2.obj (.data:port1_isr_tbl)
                   00000210    00000010     hal_digio2.obj (.data:port2_isr_tbl)
                   00000220    00000006     hal_int_rf_msp_exp430g2.obj (.data)
-                  00000226    00000004     rts430_eabi.lib : rand.obj (.data)
-                  0000022a    00000002                     : _lock.obj (.data:_lock)
-                  0000022c    00000002                     : _lock.obj (.data:_unlock)
 
-.bss       0    0000022e    00000006     UNINITIALIZED
-                  0000022e    00000004     (.common:packetCounter)
-                  00000232    00000001     (.common:buttonPressed)
-                  00000233    00000001     (.common:packetSemaphore)
+.bss       0    00000226    00000006     UNINITIALIZED
+                  00000226    00000004     (.common:packetCounter)
+                  0000022a    00000001     (.common:buttonPressed)
+                  0000022b    00000001     (.common:packetSemaphore)
 
 .TI.persistent 
 *          0    00000200    00000000     UNINITIALIZED
@@ -64,7 +61,7 @@ section   page    origin      length       input sections
                   000003b0    00000002     rts430_eabi.lib : boot.obj (.stack)
                   000003b2    0000004e     --HOLE--
 
-.text      0    0000c000    00000a40     
+.text      0    0000c000    000009d4     
                   0000c000    0000017c     cc1120_vchip_easy_link_tx.obj (.text:manualCalibration)
                   0000c17c    00000090     cc1120_vchip_easy_link_tx.obj (.text:runTX)
                   0000c20c    00000074     hal_msp_exp430g2_spi.obj (.text:trxReadWriteBurstSingle)
@@ -83,45 +80,42 @@ section   page    origin      length       input sections
                   0000c6b2    0000004c     hal_digio2.obj (.text:halDigio2IntConnect)
                   0000c6fe    00000044     hal_msp_exp430g2_spi.obj (.text:trx8BitRegAccess)
                   0000c742    00000040     cc1120_vchip_easy_link_tx.obj (.text:registerConfig)
-                  0000c782    00000038     cc1120_vchip_easy_link_tx.obj (.text:createPacket)
-                  0000c7ba    00000038     rts430_eabi.lib : rand.obj (.text:rand)
-                  0000c7f2    00000036     hal_digio2.obj (.text:halDigio2IntClear)
-                  0000c828    00000036     hal_digio2.obj (.text:halDigio2IntEnable)
-                  0000c85e    0000002c     rts430_eabi.lib : lsl16.obj (.text)
-                  0000c88a    0000002c     hal_msp_exp430g2_spi.obj (.text:trxSpiCmdStrobe)
-                  0000c8b6    00000026     rts430_eabi.lib : mult32.obj (.text)
-                  0000c8dc    0000001e     cc1120_vchip_easy_link_tx.obj (.text:main)
-                  0000c8fa    0000001c     hal_board.obj (.text:buttonPressedISR)
-                  0000c916    0000001c     hal_board.obj (.text:halInitMCU)
-                  0000c932    0000001a     rts430_eabi.lib : boot_special.obj (.text:_c_int00_noargs_noexit)
-                  0000c94c    0000001a     hal_board.obj (.text:halButtonInit)
-                  0000c966    0000001a     hal_board.obj (.text:halButtonInterruptEnable)
-                  0000c980    00000014     hal_board.obj (.text:WDT_ISR)
-                  0000c994    00000014     rts430_eabi.lib : copy_zero_init.obj (.text:decompress:ZI:__TI_zero_init)
-                  0000c9a8    00000014                     : memset.obj (.text:memset)
-                  0000c9bc    00000012                     : copy_decompress_none.obj (.text:decompress:none:__TI_decompress_none)
-                  0000c9ce    00000012                     : memcpy.obj (.text:memcpy)
-                  0000c9e0    00000010     cc112x_spi.obj (.text:cc112xSpiWriteTxFifo)
-                  0000c9f0    00000010     rts430_eabi.lib : epilog.obj (.text)
-                  0000ca00    0000000e     hal_board.obj (.text:halLedInit)
-                  0000ca0e    0000000c     cc1120_vchip_easy_link_tx.obj (.text:radioRxTxISR)
-                  0000ca1a    0000000a     hal_board.obj (.text:halButtonPushed)
-                  0000ca24    00000006     rts430_eabi.lib : isr_trap.obj (.text:_isr:__TI_ISR_TRAP)
-                  0000ca2a    00000006                     : copy_decompress_rle.obj (.text:decompress:rle24:__TI_decompress_rle24)
-                  0000ca30    00000006     hal_board.obj (.text:halLedToggle)
-                  0000ca36    00000004     rts430_eabi.lib : pre_init.obj (.text:_system_pre_init)
-                  0000ca3a    00000004                     : exit.obj (.text:abort)
-                  0000ca3e    00000002                     : _lock.obj (.text:_nop)
+                  0000c782    00000036     hal_digio2.obj (.text:halDigio2IntClear)
+                  0000c7b8    00000036     hal_digio2.obj (.text:halDigio2IntEnable)
+                  0000c7ee    0000002c     cc1120_vchip_easy_link_tx.obj (.text:createPacket)
+                  0000c81a    0000002c     rts430_eabi.lib : lsl16.obj (.text)
+                  0000c846    0000002c     hal_msp_exp430g2_spi.obj (.text:trxSpiCmdStrobe)
+                  0000c872    0000001e     cc1120_vchip_easy_link_tx.obj (.text:main)
+                  0000c890    0000001c     hal_board.obj (.text:buttonPressedISR)
+                  0000c8ac    0000001c     hal_board.obj (.text:halInitMCU)
+                  0000c8c8    0000001a     rts430_eabi.lib : boot_special.obj (.text:_c_int00_noargs_noexit)
+                  0000c8e2    0000001a     hal_board.obj (.text:halButtonInit)
+                  0000c8fc    0000001a     hal_board.obj (.text:halButtonInterruptEnable)
+                  0000c916    00000014     hal_board.obj (.text:WDT_ISR)
+                  0000c92a    00000014     rts430_eabi.lib : copy_zero_init.obj (.text:decompress:ZI:__TI_zero_init)
+                  0000c93e    00000014                     : memset.obj (.text:memset)
+                  0000c952    00000012                     : copy_decompress_none.obj (.text:decompress:none:__TI_decompress_none)
+                  0000c964    00000012                     : memcpy.obj (.text:memcpy)
+                  0000c976    00000010     cc112x_spi.obj (.text:cc112xSpiWriteTxFifo)
+                  0000c986    00000010     rts430_eabi.lib : epilog.obj (.text)
+                  0000c996    0000000e     hal_board.obj (.text:halLedInit)
+                  0000c9a4    0000000c     cc1120_vchip_easy_link_tx.obj (.text:radioRxTxISR)
+                  0000c9b0    0000000a     hal_board.obj (.text:halButtonPushed)
+                  0000c9ba    00000006     rts430_eabi.lib : isr_trap.obj (.text:_isr:__TI_ISR_TRAP)
+                  0000c9c0    00000006                     : copy_decompress_rle.obj (.text:decompress:rle24:__TI_decompress_rle24)
+                  0000c9c6    00000006     hal_board.obj (.text:halLedToggle)
+                  0000c9cc    00000004     rts430_eabi.lib : pre_init.obj (.text:_system_pre_init)
+                  0000c9d0    00000004                     : exit.obj (.text:abort)
 
-.const     0    0000ca40    00000094     
-                  0000ca40    00000094     cc1120_vchip_easy_link_tx.obj (.const:preferredSettings)
+.const     0    0000c9d4    00000094     
+                  0000c9d4    00000094     cc1120_vchip_easy_link_tx.obj (.const:preferredSettings)
 
-.cinit     0    0000cad4    0000002a     
-                  0000cad4    00000017     (.cinit..data.load) [load image, compression = rle]
-                  0000caeb    00000001     --HOLE-- [fill = 0]
-                  0000caec    00000006     (__TI_handler_table)
-                  0000caf2    00000004     (.cinit..bss.load) [load image, compression = zero_init]
-                  0000caf6    00000008     (__TI_cinit_table)
+.cinit     0    0000ca68    00000022     
+                  0000ca68    0000000f     (.cinit..data.load) [load image, compression = rle]
+                  0000ca77    00000001     --HOLE-- [fill = 0]
+                  0000ca78    00000006     (__TI_handler_table)
+                  0000ca7e    00000004     (.cinit..bss.load) [load image, compression = zero_init]
+                  0000ca82    00000008     (__TI_cinit_table)
 
 .init_array 
 *          0    0000c000    00000000     UNINITIALIZED
@@ -181,14 +175,14 @@ NMI        0    0000fffc    00000002
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 0000caf6 records: 2, size/record: 4, table size: 8
-	.data: load addr=0000cad4, load size=00000017 bytes, run addr=00000200, run size=0000002e bytes, compression=rle
-	.bss: load addr=0000caf2, load size=00000004 bytes, run addr=0000022e, run size=00000006 bytes, compression=zero_init
+__TI_cinit_table @ 0000ca82 records: 2, size/record: 4, table size: 8
+	.data: load addr=0000ca68, load size=0000000f bytes, run addr=00000200, run size=00000026 bytes, compression=rle
+	.bss: load addr=0000ca7e, load size=00000004 bytes, run addr=00000226, run size=00000006 bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 0000caec records: 3, size/record: 2, table size: 6
+__TI_handler_table @ 0000ca78 records: 3, size/record: 2, table size: 6
 	index: 0, handler: __TI_zero_init
 	index: 1, handler: __TI_decompress_rle24
 	index: 2, handler: __TI_decompress_none
@@ -208,7 +202,7 @@ address   name
 00000057  BCSCTL1                 
 00000058  BCSCTL2                 
 00000053  BCSCTL3                 
-0000ca3a  C$$EXIT                 
+0000c9d0  C$$EXIT                 
 00000059  CACTL1                  
 0000005a  CACTL2                  
 000010fb  CALBC1_12MHZ            
@@ -297,18 +291,18 @@ address   name
 0000006d  UCB0STAT                
 0000006f  UCB0TXBUF               
 00000120  WDTCTL                  
-0000c980  WDT_ISR                 
+0000c916  WDT_ISR                 
 00000400  __STACK_END             
 00000050  __STACK_SIZE            
-0000caf6  __TI_CINIT_Base         
-0000cafe  __TI_CINIT_Limit        
-0000caec  __TI_Handler_Table_Base 
-0000caf2  __TI_Handler_Table_Limit
+0000ca82  __TI_CINIT_Base         
+0000ca8a  __TI_CINIT_Limit        
+0000ca78  __TI_Handler_Table_Base 
+0000ca7e  __TI_Handler_Table_Limit
 UNDEFED   __TI_INITARRAY_Base     
 UNDEFED   __TI_INITARRAY_Limit    
-0000ca24  __TI_ISR_TRAP           
-0000c9bc  __TI_decompress_none    
-0000ca2a  __TI_decompress_rle24   
+0000c9ba  __TI_ISR_TRAP           
+0000c952  __TI_decompress_none    
+0000c9c0  __TI_decompress_rle24   
 0000ffe0  __TI_int00              
 0000ffe4  __TI_int02              
 0000ffe6  __TI_int03              
@@ -322,73 +316,67 @@ UNDEFED   __TI_INITARRAY_Limit
 0000fff8  __TI_int12              
 0000fffa  __TI_int13              
 0000fffc  __TI_int14              
-0000c994  __TI_zero_init          
+0000c92a  __TI_zero_init          
 ffffffff  __binit__               
 ffffffff  __c_args__              
-0000c9fc  __mspabi_func_epilog_1  
-0000c9fa  __mspabi_func_epilog_2  
-0000c9f8  __mspabi_func_epilog_3  
-0000c9f6  __mspabi_func_epilog_4  
-0000c9f4  __mspabi_func_epilog_5  
-0000c9f2  __mspabi_func_epilog_6  
-0000c9f0  __mspabi_func_epilog_7  
-0000c8b6  __mspabi_mpyl           
-0000c8b6  __mspabi_mpyl_sw        
-0000c85e  __mspabi_slli           
-0000c886  __mspabi_slli_1         
-0000c874  __mspabi_slli_10        
-0000c872  __mspabi_slli_11        
-0000c870  __mspabi_slli_12        
-0000c86e  __mspabi_slli_13        
-0000c86c  __mspabi_slli_14        
-0000c86a  __mspabi_slli_15        
-0000c884  __mspabi_slli_2         
-0000c882  __mspabi_slli_3         
-0000c880  __mspabi_slli_4         
-0000c87e  __mspabi_slli_5         
-0000c87c  __mspabi_slli_6         
-0000c87a  __mspabi_slli_7         
-0000c878  __mspabi_slli_8         
-0000c876  __mspabi_slli_9         
+0000c992  __mspabi_func_epilog_1  
+0000c990  __mspabi_func_epilog_2  
+0000c98e  __mspabi_func_epilog_3  
+0000c98c  __mspabi_func_epilog_4  
+0000c98a  __mspabi_func_epilog_5  
+0000c988  __mspabi_func_epilog_6  
+0000c986  __mspabi_func_epilog_7  
+0000c81a  __mspabi_slli           
+0000c842  __mspabi_slli_1         
+0000c830  __mspabi_slli_10        
+0000c82e  __mspabi_slli_11        
+0000c82c  __mspabi_slli_12        
+0000c82a  __mspabi_slli_13        
+0000c828  __mspabi_slli_14        
+0000c826  __mspabi_slli_15        
+0000c840  __mspabi_slli_2         
+0000c83e  __mspabi_slli_3         
+0000c83c  __mspabi_slli_4         
+0000c83a  __mspabi_slli_5         
+0000c838  __mspabi_slli_6         
+0000c836  __mspabi_slli_7         
+0000c834  __mspabi_slli_8         
+0000c832  __mspabi_slli_9         
 0000c480  _auto_init              
-0000c932  _c_int00_noargs_noexit  
-0000022a  _lock                   
-0000ca3e  _nop                    
+0000c8c8  _c_int00_noargs_noexit  
 0000fffe  _reset_vector           
 000003b0  _stack                  
-0000ca36  _system_pre_init        
-0000022c  _unlock                 
-0000ca3a  abort                   
+0000c9cc  _system_pre_init        
+0000c9d0  abort                   
 ffffffff  binit                   
 0000c61a  cc112xSpiReadReg        
 0000c666  cc112xSpiWriteReg       
-0000c9e0  cc112xSpiWriteTxFifo    
+0000c976  cc112xSpiWriteTxFifo    
 0000c5cc  exp430RfSpiInit         
 00000224  gpio0                   
 00000222  gpio2                   
 00000220  gpio3                   
-0000c94c  halButtonInit           
-0000c966  halButtonInterruptEnable
-0000ca1a  halButtonPushed         
-0000c7f2  halDigio2IntClear       
+0000c8e2  halButtonInit           
+0000c8fc  halButtonInterruptEnable
+0000c9b0  halButtonPushed         
+0000c782  halDigio2IntClear       
 0000c6b2  halDigio2IntConnect     
-0000c828  halDigio2IntEnable      
+0000c7b8  halDigio2IntEnable      
 0000c3b8  halDigio2IntSetEdge     
-0000c916  halInitMCU              
-0000ca00  halLedInit              
-0000ca30  halLedToggle            
-0000c8dc  main                    
-0000c9ce  memcpy                  
-0000c9a8  memset                  
+0000c8ac  halInitMCU              
+0000c996  halLedInit              
+0000c9c6  halLedToggle            
+0000c872  main                    
+0000c964  memcpy                  
+0000c93e  memset                  
 0000c280  port1_ISR               
 0000c2ea  port2_ISR               
-0000c7ba  rand                    
 0000c4d8  trx16BitRegAccess       
 0000c6fe  trx8BitRegAccess        
 0000c52c  trxClearIntFlag         
 0000c57c  trxEnableInt            
 0000c41c  trxIsrConnect           
-0000c88a  trxSpiCmdStrobe         
+0000c846  trxSpiCmdStrobe         
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -484,8 +472,6 @@ address   name
 00000220  gpio3                   
 00000222  gpio2                   
 00000224  gpio0                   
-0000022a  _lock                   
-0000022c  _unlock                 
 000003b0  _stack                  
 00000400  __STACK_END             
 000010c0  TLV_CHECKSUM            
@@ -514,59 +500,55 @@ address   name
 0000c666  cc112xSpiWriteReg       
 0000c6b2  halDigio2IntConnect     
 0000c6fe  trx8BitRegAccess        
-0000c7ba  rand                    
-0000c7f2  halDigio2IntClear       
-0000c828  halDigio2IntEnable      
-0000c85e  __mspabi_slli           
-0000c86a  __mspabi_slli_15        
-0000c86c  __mspabi_slli_14        
-0000c86e  __mspabi_slli_13        
-0000c870  __mspabi_slli_12        
-0000c872  __mspabi_slli_11        
-0000c874  __mspabi_slli_10        
-0000c876  __mspabi_slli_9         
-0000c878  __mspabi_slli_8         
-0000c87a  __mspabi_slli_7         
-0000c87c  __mspabi_slli_6         
-0000c87e  __mspabi_slli_5         
-0000c880  __mspabi_slli_4         
-0000c882  __mspabi_slli_3         
-0000c884  __mspabi_slli_2         
-0000c886  __mspabi_slli_1         
-0000c88a  trxSpiCmdStrobe         
-0000c8b6  __mspabi_mpyl           
-0000c8b6  __mspabi_mpyl_sw        
-0000c8dc  main                    
-0000c916  halInitMCU              
-0000c932  _c_int00_noargs_noexit  
-0000c94c  halButtonInit           
-0000c966  halButtonInterruptEnable
-0000c980  WDT_ISR                 
-0000c994  __TI_zero_init          
-0000c9a8  memset                  
-0000c9bc  __TI_decompress_none    
-0000c9ce  memcpy                  
-0000c9e0  cc112xSpiWriteTxFifo    
-0000c9f0  __mspabi_func_epilog_7  
-0000c9f2  __mspabi_func_epilog_6  
-0000c9f4  __mspabi_func_epilog_5  
-0000c9f6  __mspabi_func_epilog_4  
-0000c9f8  __mspabi_func_epilog_3  
-0000c9fa  __mspabi_func_epilog_2  
-0000c9fc  __mspabi_func_epilog_1  
-0000ca00  halLedInit              
-0000ca1a  halButtonPushed         
-0000ca24  __TI_ISR_TRAP           
-0000ca2a  __TI_decompress_rle24   
-0000ca30  halLedToggle            
-0000ca36  _system_pre_init        
-0000ca3a  C$$EXIT                 
-0000ca3a  abort                   
-0000ca3e  _nop                    
-0000caec  __TI_Handler_Table_Base 
-0000caf2  __TI_Handler_Table_Limit
-0000caf6  __TI_CINIT_Base         
-0000cafe  __TI_CINIT_Limit        
+0000c782  halDigio2IntClear       
+0000c7b8  halDigio2IntEnable      
+0000c81a  __mspabi_slli           
+0000c826  __mspabi_slli_15        
+0000c828  __mspabi_slli_14        
+0000c82a  __mspabi_slli_13        
+0000c82c  __mspabi_slli_12        
+0000c82e  __mspabi_slli_11        
+0000c830  __mspabi_slli_10        
+0000c832  __mspabi_slli_9         
+0000c834  __mspabi_slli_8         
+0000c836  __mspabi_slli_7         
+0000c838  __mspabi_slli_6         
+0000c83a  __mspabi_slli_5         
+0000c83c  __mspabi_slli_4         
+0000c83e  __mspabi_slli_3         
+0000c840  __mspabi_slli_2         
+0000c842  __mspabi_slli_1         
+0000c846  trxSpiCmdStrobe         
+0000c872  main                    
+0000c8ac  halInitMCU              
+0000c8c8  _c_int00_noargs_noexit  
+0000c8e2  halButtonInit           
+0000c8fc  halButtonInterruptEnable
+0000c916  WDT_ISR                 
+0000c92a  __TI_zero_init          
+0000c93e  memset                  
+0000c952  __TI_decompress_none    
+0000c964  memcpy                  
+0000c976  cc112xSpiWriteTxFifo    
+0000c986  __mspabi_func_epilog_7  
+0000c988  __mspabi_func_epilog_6  
+0000c98a  __mspabi_func_epilog_5  
+0000c98c  __mspabi_func_epilog_4  
+0000c98e  __mspabi_func_epilog_3  
+0000c990  __mspabi_func_epilog_2  
+0000c992  __mspabi_func_epilog_1  
+0000c996  halLedInit              
+0000c9b0  halButtonPushed         
+0000c9ba  __TI_ISR_TRAP           
+0000c9c0  __TI_decompress_rle24   
+0000c9c6  halLedToggle            
+0000c9cc  _system_pre_init        
+0000c9d0  C$$EXIT                 
+0000c9d0  abort                   
+0000ca78  __TI_Handler_Table_Base 
+0000ca7e  __TI_Handler_Table_Limit
+0000ca82  __TI_CINIT_Base         
+0000ca8a  __TI_CINIT_Limit        
 0000ffe0  __TI_int00              
 0000ffe4  __TI_int02              
 0000ffe6  __TI_int03              
@@ -587,4 +569,4 @@ ffffffff  binit
 UNDEFED   __TI_INITARRAY_Base     
 UNDEFED   __TI_INITARRAY_Limit    
 
-[191 symbols]
+[185 symbols]

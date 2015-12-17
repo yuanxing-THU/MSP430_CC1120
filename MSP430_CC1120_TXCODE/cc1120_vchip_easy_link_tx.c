@@ -225,7 +225,7 @@ static void createPacket(uint8 txBuffer[])
   // fill rest of buffer with random bytes
   for(i =3; i< (PKTLEN+1); i++)
   {
-    txBuffer[i] = (uint8)rand();
+    txBuffer[i] = i;//(uint8)rand();
   }
 }
 /******************************************************************************
