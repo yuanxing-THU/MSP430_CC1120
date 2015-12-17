@@ -53,21 +53,27 @@
 #define ISR_ACTION_REQUIRED 1
 #define ISR_IDLE            0
 
-#define PKTLEN              30
+//#define PKTLEN              30
 /******************************************************************************
 * LOCAL VARIABLES
 */
 static uint8  packetSemaphore;
 static uint32 packetCounter;
 
+static uint8 pktlen = 0;
+static uint8 RX_PC_FLAG = 0;
+static uint8 TX_FALG = 0;
+static uint8 RX_SL_FLAG = 0;
+static uint8 txBuffer[200] = {0};
 /******************************************************************************
 * STATIC FUNCTIONS
 */
 static void registerConfig(void);
-static void runTX(void);
+static void runTX_RX(void);
 static void createPacket(uint8 txBuffer[]);
 static void radioRxTxISR(void);
 static void manualCalibration(void);
+static void serialInit(void);
 /******************************************************************************
  * @fn          main
  *
@@ -90,13 +96,13 @@ void main(void)
   exp430RfSpiInit();
   // write radio registers
   registerConfig();
-
+  serialInit();
   // run either TX or RX dependent of build define  
-  runTX();
+  runTX_RX();
  
 }
 /******************************************************************************
- * @fn          runTX
+ * @fn          runTX_RX
  *
  * @brief       sends one packet on button push. Updates packet counter and
  *              display for each packet sent.
@@ -105,20 +111,45 @@ void main(void)
  *
  * @return      none
  */
-static void runTX(void)
+static void runTX_RX(void)
 {
-  // Initialize packet buffer of size PKTLEN + 1
+  while(TRUE)
+  {
+	  if(TX_FALG == 1)//send data to slave module
+	  {
+		  TX_FALG = 0;
+		  P2SEL &= ~0x40; // P2SEL bit 6 (GDO0) set to one as default. Set to zero (I/O)
+		  // connect ISR function to GPIO0, interrupt on falling edge
+		  trxIsrConnect(GPIO_0, FALLING_EDGE, &radioRxTxISR);
+
+		  // enable interrupt from GPIO_0
+		  trxEnableInt(GPIO_0);
+
+		  // Calibrate radio according to errata
+		  manualCalibration();
+
+		  createPacket(txBuffer);
+		  // write packet to tx fifo
+		  cc112xSpiWriteTxFifo(txBuffer,pktlen+1);
+	      // strobe TX to send packet
+	      trxSpiCmdStrobe(CC112X_STX);
+	      // wait for interrupt that packet has been sent.
+	      // (Assumes the GPIO connected to the radioRxTxISR function is set
+	      // to GPIOx_CFG = 0x06)
+	      while(!packetSemaphore);
+	      // clear semaphore flag
+	      packetSemaphore = ISR_IDLE;
+	      pktlen = 0;
+	      halLedToggle(LED1);
+	      __delay_cycles(250000);
+	      halLedToggle(LED1);
+	      IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
+	  }
+  }
+  /*// Initialize packet buffer of size PKTLEN + 1
   uint8 txBuffer[PKTLEN+1] = {0};
 
-  P2SEL &= ~0x40; // P2SEL bit 6 (GDO0) set to one as default. Set to zero (I/O)
-  // connect ISR function to GPIO0, interrupt on falling edge
-  trxIsrConnect(GPIO_0, FALLING_EDGE, &radioRxTxISR);
-  
-  // enable interrupt from GPIO_0
-  trxEnableInt(GPIO_0);
- 
-  // Calibrate radio according to errata
-  manualCalibration(); 
+
   
   // infinite loop
   while(TRUE)
@@ -156,8 +187,20 @@ static void runTX(void)
         
       }while(!halButtonPushed());
     }
-  }
+  }*/
 }
+static void serialInit(void)
+{
+	P1SEL |= BIT1 + BIT2 ;                     // P1.1 = RXD, P1.2=TXD
+	P1SEL2 |= BIT1 + BIT2;
+	UCA0CTL1 |= UCSSEL_2;                     // SMCLK
+	UCA0BR0 = 8;                              // 1MHz 115200
+	UCA0BR1 = 0;                              // 1MHz 115200
+	UCA0MCTL = UCBRS2 + UCBRS0;               // Modulation UCBRSx = 5
+	UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
+	IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
+}
+
 /*******************************************************************************
 * @fn          radioRxTxISR
 *
@@ -196,6 +239,44 @@ static void registerConfig(void) {
     cc112xSpiWriteReg( preferredSettings[i].addr, &writeByte, 1);
   }
 }
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=USCIAB0RX_VECTOR
+__interrupt void USCI0RX_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCI0RX_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  if(RX_PC_FLAG == 1 && UCA0RXBUF != 0xFF)
+  {
+	  pktlen++;
+	  txBuffer[pktlen-1]=UCA0RXBUF;
+  }
+  if (UCA0RXBUF == 0xFF) //data flag from PC
+  {
+	  if(RX_PC_FLAG == 0)//begin revieve data from PC
+	  {
+		  RX_PC_FLAG = 1;
+		  pktlen = 0 ;
+
+	  }else // stop revieve
+	  {
+		  RX_PC_FLAG = 0;
+		  if (pktlen !=0) //Do recieve data from PC
+		  {
+			  TX_FALG =1; //  send data to slave module
+			  IE2 &= ~UCA0RXIE; //close UCA0RX interrupt
+		  }
+		  else // recieve nothing
+		  {
+			  RX_PC_FLAG = 1; //regard the data flag as begining
+		  }
+	  }
+  }
+}
+
 /******************************************************************************
  * @fn          createPacket
  *
@@ -217,8 +298,13 @@ static void registerConfig(void) {
  */
 static void createPacket(uint8 txBuffer[])
 {
-  
-  txBuffer[0] = PKTLEN;                     // Length byte
+  uint8 i =3;
+  for (i=pktlen;i>0;i--)
+  {
+	  txBuffer[i]=txBuffer[i-1];
+  }
+  txBuffer[0] = pktlen;
+  /*//txBuffer[0] = PKTLEN;                     // Length byte
   txBuffer[1] = (uint8) packetCounter >> 8; // MSB of packetCounter
   txBuffer[2] = (uint8) packetCounter;      // LSB of packetCounter
   uint8 i =3;
@@ -226,7 +312,7 @@ static void createPacket(uint8 txBuffer[])
   for(i =3; i< (PKTLEN+1); i++)
   {
     txBuffer[i] = i;//(uint8)rand();
-  }
+  }*/
 }
 /******************************************************************************
  * @fn          manualCalibration

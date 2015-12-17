@@ -108,7 +108,7 @@ void main(void)
  */
 static void runRX(void)
 {
-  uint8 rxBuffer[128] = {0};
+  uint8 rxBuffer[200] = {0};
   uint8 rxBytes, marcStatus;
   
    P2SEL &= ~0x40; // P2SEL bit 6 (GDO0) set to one as default. Set to zero (I/O)
