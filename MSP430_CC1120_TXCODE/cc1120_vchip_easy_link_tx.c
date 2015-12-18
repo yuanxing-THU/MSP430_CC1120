@@ -186,48 +186,6 @@ static void runTX_RX(void)
   	    IE2 |= UCA0RXIE;                          // Enable USCI_A0 UART RX interrupt
 	  }
   }
-  /*// Initialize packet buffer of size PKTLEN + 1
-  uint8 txBuffer[PKTLEN+1] = {0};
-
-
-  
-  // infinite loop
-  while(TRUE)
-  {
-    // wait for button push
-    if(halButtonPushed())
-    { 
-      //continiously sent packets until button is pressed
-      do
-      {
-        // update packet counter
-        packetCounter++;
-        
-        // create a random packet with PKTLEN + 2 byte packet counter + n x random bytes
-        createPacket(txBuffer);
-      
-      // write packet to tx fifo
-      cc112xSpiWriteTxFifo(txBuffer,sizeof(txBuffer));
-      
-      // strobe TX to send packet
-      trxSpiCmdStrobe(CC112X_STX);
-      
-        // wait for interrupt that packet has been sent. 
-        // (Assumes the GPIO connected to the radioRxTxISR function is set 
-        // to GPIOx_CFG = 0x06)
-        while(!packetSemaphore);
-        
-        // clear semaphore flag
-        packetSemaphore = ISR_IDLE;
-       
-      halLedToggle(LED1);
-       __delay_cycles(250000); 
-       halLedToggle(LED1);
-        
-        
-      }while(!halButtonPushed());
-    }
-  }*/
 }
 static void serialInit(void)
 {
