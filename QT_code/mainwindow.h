@@ -4,7 +4,8 @@
 #include <QMainWindow>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
-
+#include <QTimer>
+#include <QFile>
 namespace Ui {
 class MainWindow;
 }
@@ -21,13 +22,26 @@ private:
     Ui::MainWindow *ui;
     bool UART_status; // false unconnected ;  true connected
     bool WORK_status; // false unworked ; true working
+    int test_times;
+    int currunt_times;
+    int message_length;
     QSerialPort *serial;
     QSerialPortInfo *serialinfo;
     void writeData(const QByteArray &data);
+    QTimer m_time;
+    QFile TXfile;
+    QFile RXfile;
+    QString TXfilename;
+    QString RXfilename;
+    QString PAstatus;
+    int Distance;
+signals:
+    void test_signals();
 private slots:
     void UART_ACTION(void);
-    void serial_readData(void);
     void BEGIN_ACTION(void);
+    void test_once(void);
+    void TimeoutAction(void);
 };
 
 #endif // MAINWINDOW_H
