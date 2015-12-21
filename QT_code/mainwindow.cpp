@@ -128,8 +128,7 @@ void MainWindow::test_once(void)
 {
     QByteArray data;
     data.append(0xff);
-    data.append(0xff);
-    for(int i = 1;i<message_length ;i++)
+    for(int i = 0;i<message_length ;i++)
     {
         unsigned char c=48+rand()%74;  // ASCII 48~122
         data.append(c);
@@ -173,5 +172,7 @@ void MainWindow::TimeoutAction(void)
         RXfile.close();
         TXfile.close();
         ui->realtime_display->setText(0);
+        ui->BEGIN->setText("BEGIN");
+        WORK_status = false;
     }
 }

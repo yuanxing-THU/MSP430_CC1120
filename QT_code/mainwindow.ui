@@ -257,6 +257,12 @@
      <height>23</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuTwoWay">
+    <property name="title">
+     <string>TwoWay</string>
+    </property>
+   </widget>
+   <addaction name="menuTwoWay"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
