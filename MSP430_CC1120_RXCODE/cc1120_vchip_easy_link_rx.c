@@ -153,10 +153,14 @@ static void runRX(void)
 
 					// Read n bytes from rx fifo
 					cc112xSpiReadRxFifo(rxBuffer, rxBytes);
-					halLedToggle(LED1);
-					__delay_cycles(250000);
-					halLedToggle(LED1);
-                    /*
+					if(rxBuffer[rxBytes-1] & 0x80){
+
+						halLedToggle(LED1);
+						RTMODE_FLAG = 1;
+						//__delay_cycles(250000);
+						//halLedToggle(LED1);
+					}
+					/*
 					// Check CRC ok (CRC_OK: bit7 in second status byte)
 					// This assumes status bytes are appended in RX_FIFO
 					// (PKT_CFG1.APPEND_STATUS = 1.)
@@ -179,7 +183,7 @@ static void runRX(void)
     		}
     	    // Reset packet semaphore
     	    packetSemaphore = ISR_IDLE;
-    		RTMODE_FLAG = 1;
+
     	}
     }
     if(RTMODE_FLAG == 1)  // TX to master module
@@ -198,8 +202,8 @@ static void runRX(void)
     	RTMODE_FLAG = 0;
     	trxSpiCmdStrobe(CC112X_SRX);
 		halLedToggle(LED1);
-		__delay_cycles(250000);
-		halLedToggle(LED1);
+		//__delay_cycles(250000);
+		//halLedToggle(LED1);
     }
   } 
 }

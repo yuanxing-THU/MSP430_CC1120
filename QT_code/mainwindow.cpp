@@ -32,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->BEGIN,SIGNAL(clicked()),this,SLOT(BEGIN_ACTION()));
     connect(this,SIGNAL(test_signals()),this,SLOT(test_once()));
     connect(&m_time,SIGNAL(timeout()),SLOT(TimeoutAction()));
+
+    interval = 1000;
 }
 
 MainWindow::~MainWindow()
@@ -143,7 +145,7 @@ void MainWindow::test_once(void)
     if(WORK_status == true)
     {
         writeData(data);
-        m_time.start(2000);
+        m_time.start(interval);
         char ccurrunt_times[10];
         itoa(currunt_times,ccurrunt_times,10);
         ui->realtime_display->setText(ccurrunt_times);

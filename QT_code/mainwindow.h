@@ -35,6 +35,7 @@ private:
     QString RXfilename;
     QString PAstatus;
     int Distance;
+    int interval;
 signals:
     void test_signals();
 private slots:

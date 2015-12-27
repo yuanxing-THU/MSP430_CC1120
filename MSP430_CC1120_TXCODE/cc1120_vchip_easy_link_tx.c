@@ -142,10 +142,11 @@ static void runTX_RX(void)
 	      packetSemaphore = ISR_IDLE;
 
 	      halLedToggle(LED1);
-	      __delay_cycles(250000);
-	      halLedToggle(LED1);
+	      //__delay_cycles(250000);
+	      //halLedToggle(LED1);
 	      RX_SL_FLAG = 1 ;  //set revieve form slave module flag
 	      trxSpiCmdStrobe(CC112X_SRX);
+	      IE2 |= UCA0RXIE;                          // Enable USCI_A0 UART RX interrupt
 	  }
 
 	  if(RX_SL_FLAG==1&&packetSemaphore!=ISR_IDLE) //have recieved data from slave module
@@ -167,23 +168,27 @@ static void runTX_RX(void)
 			}else{
 				// Read n bytes from rx fifo
 				cc112xSpiReadRxFifo(txBuffer, pktlen);
-				uint8 i = 0 ;
-				for(i=0;i<pktlen;i++)
-				{
-					IFG2 &= ~UCA0TXIFG;
-					UCA0TXBUF = txBuffer[i];;
-					while(!(IFG2 & UCA0TXIFG));
-					IFG2 &= ~UCA0TXIFG;
+
+				if(txBuffer[pktlen-1] & 0x80){
+					uint8 i = 0 ;
+					for(i=0;i<pktlen;i++)
+					{
+						IFG2 &= ~UCA0TXIFG;
+						UCA0TXBUF = txBuffer[i];;
+						while(!(IFG2 & UCA0TXIFG));
+						IFG2 &= ~UCA0TXIFG;
+					}
 				}
 				halLedToggle(LED1);
-			    __delay_cycles(250000);
-				halLedToggle(LED1);
+			    //__delay_cycles(250000);
+				//halLedToggle(LED1);
+
 			}
   		}
   	    // Reset packet semaphore
   	    packetSemaphore = ISR_IDLE;
   	    pktlen = 0;
-  	    IE2 |= UCA0RXIE;                          // Enable USCI_A0 UART RX interrupt
+
 	  }
   }
 }
@@ -262,6 +267,7 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCI0RX_ISR (void)
 	  }else // stop revieve
 	  {
 		  RX_PC_FLAG = 0;
+		  RX_SL_FLAG = 0;
 		  if (pktlen !=0) //Do recieve data from PC
 		  {
 			  TX_FALG =1; //  send data to slave module
