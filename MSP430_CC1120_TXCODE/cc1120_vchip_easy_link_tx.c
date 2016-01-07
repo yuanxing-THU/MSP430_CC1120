@@ -129,6 +129,10 @@ static void runTX_RX(void)
 	  if(TX_FALG == 1)//send data to slave module
 	  {
 		  TX_FALG = 0;
+
+		  trxSpiCmdStrobe(CC112X_SIDLE);
+
+		  //trxIsrConnect(GPIO_0, FALLING_EDGE, &radioRxTxISR);
 		  createPacket(txBuffer);
 		  // write packet to tx fifo
 		  cc112xSpiWriteTxFifo(txBuffer,pktlen+1);
@@ -136,7 +140,8 @@ static void runTX_RX(void)
 	      trxSpiCmdStrobe(CC112X_STX);
 	      // wait for interrupt that packet has been sent.
 	      // (Assumes the GPIO connected to the radioRxTxISR function is set
-	      // to GPIOx_CFG = 0x06)
+	      // to GPIOx_CFG = 0x06
+
 	      while(!packetSemaphore);
 	      // clear semaphore flag
 	      packetSemaphore = ISR_IDLE;
@@ -146,6 +151,7 @@ static void runTX_RX(void)
 	      //halLedToggle(LED1);
 	      RX_SL_FLAG = 1 ;  //set revieve form slave module flag
 	      trxSpiCmdStrobe(CC112X_SRX);
+
 	      IE2 |= UCA0RXIE;                          // Enable USCI_A0 UART RX interrupt
 	  }
 
@@ -180,9 +186,6 @@ static void runTX_RX(void)
 					}
 				}
 				halLedToggle(LED1);
-			    //__delay_cycles(250000);
-				//halLedToggle(LED1);
-
 			}
   		}
   	    // Reset packet semaphore
@@ -267,10 +270,11 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCI0RX_ISR (void)
 	  }else // stop revieve
 	  {
 		  RX_PC_FLAG = 0;
-		  RX_SL_FLAG = 0;
+
 		  if (pktlen !=0) //Do recieve data from PC
 		  {
 			  TX_FALG =1; //  send data to slave module
+			  RX_SL_FLAG = 0;
 			  IE2 &= ~UCA0RXIE; //close UCA0RX interrupt
 		  }
 		  else // recieve nothing
