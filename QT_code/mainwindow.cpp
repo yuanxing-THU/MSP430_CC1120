@@ -33,7 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,SIGNAL(test_signals()),this,SLOT(test_once()));
     connect(&m_time,SIGNAL(timeout()),SLOT(TimeoutAction()));
 
-    interval = 1000;
+    interval = 500;
+    correct_rate = 0;
 }
 
 MainWindow::~MainWindow()
@@ -128,41 +129,57 @@ void MainWindow::writeData(const QByteArray &data)
 }
 void MainWindow::test_once(void)
 {
-    QByteArray data;
-    data.append(0xff);
+    //QByteArray txdata;
+    txdata.clear();
+    txdata.append(0xff);
     for(int i = 0;i<message_length ;i++)
     {
         unsigned char c=48+rand()%74;  // ASCII 48~122
-        data.append(c);
+        txdata.append(c);
     }
-    data.append(0xff);
+    txdata.append(0xff);
     QTextStream TXout(&TXfile);
-    for(int i=0;i<data.length();i++)
+    for(int i=0;i<txdata.length();i++)
     {
-        TXout<<data[i];
+        TXout<<txdata[i];
     }
     TXout<<"\n";
     if(WORK_status == true)
     {
-        writeData(data);
+        writeData(txdata);
         m_time.start(interval);
         char ccurrunt_times[10];
         itoa(currunt_times,ccurrunt_times,10);
         ui->realtime_display->setText(ccurrunt_times);
     }
-
-
 }
 void MainWindow::TimeoutAction(void)
 {
     m_time.stop();
-    QByteArray data = serial->readAll();
+    rxdata.clear();
+    rxdata = serial->readAll();
     QTextStream RXout(&RXfile);
-    for(int i=0;i<data.length();i++)
+    for(int i=0;i<rxdata.length();i++)
     {
-        RXout<<data[i];
+        RXout<<rxdata[i];
     }
     RXout<<"\n";
+
+    bool tfflag = true;
+    for(int i=1;i<=message_length;i++)
+    {
+        if(txdata[i]!=rxdata[i+1])
+        {
+            tfflag = false;
+            break;
+        }
+    }
+    if(tfflag == true)
+    {
+        correct_rate++;
+    }
+    ui->crate->setText(QString::number((int)(correct_rate*100/test_times),10));
+
     currunt_times --;
     if (currunt_times != 0)
     {
@@ -176,5 +193,6 @@ void MainWindow::TimeoutAction(void)
         ui->realtime_display->setText(0);
         ui->BEGIN->setText("BEGIN");
         WORK_status = false;
+        correct_rate = 0;
     }
 }

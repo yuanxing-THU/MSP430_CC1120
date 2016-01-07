@@ -36,6 +36,9 @@ private:
     QString PAstatus;
     int Distance;
     int interval;
+    QByteArray txdata;
+    int correct_rate;
+    QByteArray rxdata;
 signals:
     void test_signals();
 private slots:
