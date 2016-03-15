@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     WORK_status = false;
     QStringList comlist;
     QStringList PAlist;
-    comlist<<"COM1"<<"COM2"<<"COM3"<<"COM4"<<"COM5"<<"COM6"<<"COM7"<<"COM8";
+    comlist<<"COM1"<<"COM2"<<"COM3"<<"COM4"<<"COM5"<<"COM6"<<"COM7"<<"COM8";   // add the approprite option
     PAlist<<"None"<<"3dbi"<<"5dbi";
     ui->UART_com_num->addItems(comlist);
     ui->PAstatus->addItems(PAlist);
@@ -66,48 +66,32 @@ void MainWindow::UART_ACTION(void) //after clicked UART_connect_button
 }
 void MainWindow::BEGIN_ACTION(void)
 {
+    if(UART_status==false){
+        QMessageBox::information(this,"USART","OPEN THE USART FIRST!");
+        return ;
+    }
     if(WORK_status == false)
     {
         ui->BEGIN->setText("STOP");
         WORK_status = true;
-
         test_times = ui->test_times->value();
+        cycle_times=ui->cycle_times->value();
         currunt_times = test_times;
+        currunt_cycle = cycle_times;
         message_length = ui->message_len->value();
         Distance = ui->Distance->value();
         PAstatus = ui->PAstatus->currentText();
 
+        char ccurrunt_times[10];
+        itoa(currunt_times,ccurrunt_times,10);
+        ui->test_times_label->setText(ccurrunt_times);
 
-        char cmessage_length[10];
-        char ctest_times[10];
-        char cdistance[10];
-        QString smessage_length;
-        QString stest_times;
-        QString sdistance;
-        itoa(test_times,ctest_times,10);
-        itoa(message_length,cmessage_length,10);
-        itoa(Distance,cdistance,10);
-        smessage_length = cmessage_length;
-        stest_times = ctest_times;
-        sdistance = cdistance;
-        QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
+        char ccurrunt_cycle[10];
+        itoa(currunt_cycle,ccurrunt_cycle,10);
+        ui->cycle_times_label->setText(ccurrunt_cycle);
 
 
-
-        RXfilename = time.toString("yyyy-MM-dd_hh-mm-ss"); //设置显示格式
-        RXfilename+="RX_ml"+smessage_length+"_tt"+stest_times+"_dt"+sdistance+"_PA"+PAstatus+".txt";
-        RXfile.setFileName(RXfilename);
-
-        TXfilename = time.toString("yyyy-MM-dd_hh-mm-ss"); //设置显示格式
-        TXfilename+="TX_ml"+smessage_length+"_tt"+stest_times+"_dt"+sdistance+"_PA"+PAstatus+".txt";
-        TXfile.setFileName(TXfilename);
-
-        if(!RXfile.open(QFile::WriteOnly |QIODevice::Truncate)){
-            QMessageBox::warning(this,"RXFile","RXFile cannot open!");
-        }else if(!TXfile.open(QFile::WriteOnly |QIODevice::Truncate)){
-            QMessageBox::warning(this,"TXFile","TXFile cannot open!");
-        }
-        else
+        if(create_file()==true)
         {
             emit test_signals();
         }
@@ -119,9 +103,45 @@ void MainWindow::BEGIN_ACTION(void)
         QMessageBox::information(this,"STOP","STOP TEST!");
         RXfile.close();
         TXfile.close();
-        ui->realtime_display->setText(0);
+        ui->test_times_label->setText(0);
+        ui->cycle_times_label->setText(0);
     }
 }
+bool MainWindow::create_file(void){
+    char cmessage_length[10];
+    char ctest_times[10];
+    char cdistance[10];
+    QString smessage_length;
+    QString stest_times;
+    QString sdistance;
+    itoa(test_times,ctest_times,10);
+    itoa(message_length,cmessage_length,10);
+    itoa(Distance,cdistance,10);
+    smessage_length = cmessage_length;
+    stest_times = ctest_times;
+    sdistance = cdistance;
+    QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
+
+
+
+    RXfilename = time.toString("yyyy-MM-dd_hh-mm-ss"); //设置显示格式
+    RXfilename+="RX_ml"+smessage_length+"_tt"+stest_times+"_dt"+sdistance+"_PA"+PAstatus+".txt";
+    RXfile.setFileName(RXfilename);
+
+    TXfilename = time.toString("yyyy-MM-dd_hh-mm-ss"); //设置显示格式
+    TXfilename+="TX_ml"+smessage_length+"_tt"+stest_times+"_dt"+sdistance+"_PA"+PAstatus+".txt";
+    TXfile.setFileName(TXfilename);
+
+    if(!RXfile.open(QFile::WriteOnly |QIODevice::Truncate)){
+        QMessageBox::warning(this,"RXFile","RXFile cannot open!");
+    }else if(!TXfile.open(QFile::WriteOnly |QIODevice::Truncate)){
+        QMessageBox::warning(this,"TXFile","TXFile cannot open!");
+    }else{
+        return true;
+    }
+    return false;
+}
+
 void MainWindow::writeData(const QByteArray &data)
 {
     serial->write(data);
@@ -148,14 +168,13 @@ void MainWindow::test_once(void)
     {
         writeData(txdata);
         m_time.start(interval);
-        char ccurrunt_times[10];
-        itoa(currunt_times,ccurrunt_times,10);
-        ui->realtime_display->setText(ccurrunt_times);
+
     }
 }
 void MainWindow::TimeoutAction(void)
 {
     m_time.stop();
+    //judgement
     rxdata.clear();
     rxdata = serial->readAll();
     QTextStream RXout(&RXfile);
@@ -180,19 +199,52 @@ void MainWindow::TimeoutAction(void)
     }
     ui->crate->setText(QString::number((int)(correct_rate*100/test_times),10));
 
+
     currunt_times --;
+    char ccurrunt_times[10];
+    itoa(currunt_times,ccurrunt_times,10);
+    ui->test_times_label->setText(ccurrunt_times);
+
     if (currunt_times != 0)
     {
         if(WORK_status == true)
             emit test_signals();
     }else
     {
-        QMessageBox::information(this,"COMPLETE","TEST OVER!");
+        currunt_cycle--;
+        char ccurrunt_cycle[10];
+        itoa(currunt_cycle,ccurrunt_cycle,10);
+        ui->cycle_times_label->setText(ccurrunt_cycle);
+
         RXfile.close();
         TXfile.close();
-        ui->realtime_display->setText(0);
-        ui->BEGIN->setText("BEGIN");
-        WORK_status = false;
+
+        correctratio.push_back(correct_rate*100/test_times);
+        ui->ratio_display->append(QString::number((int)(correct_rate*100/test_times),10)+"%");
         correct_rate = 0;
+        currunt_times = test_times;
+        if(currunt_cycle==0){
+            WORK_status = false;
+            ui->BEGIN->setText("BEGIN");
+            QMessageBox::information(this,"COMPLETE","TEST OVER!");
+            QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
+            crfile.setFileName(time.toString("yyyy-MM-dd_hh-mm-ss")+"_correct_ratio.txt");
+            if(!crfile.open(QFile::WriteOnly |QIODevice::Truncate)){
+                QMessageBox::warning(this,"crfile","crfile cannot open!");
+            }else{
+                QTextStream CRout(&crfile);
+                for(int i=0;i<correctratio.size();i++){
+                    CRout<<correctratio[i];
+                    CRout<<"\n";
+                }
+
+                crfile.close();
+            }
+
+        }else{
+            if(create_file()==true){
+                emit test_signals();
+            }
+        }
     }
 }
